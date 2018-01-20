@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from rq import Queue
 from worker import conn
-from utils import count_words_at_url
+from worker_tasks import run_script
 
 app = Flask(__name__)
 q = Queue(connection=conn)
@@ -26,7 +26,7 @@ def handle_job():
         else:
             output = { 'id': None, 'error_message': 'No job exists with the id number ' + query_id }
     else:
-        new_job = q.enqueue(count_words_at_url, 'http://heroku.com')
+        new_job = q.enqueue(run_script, 'scripts/example_compair.py', timeout='1h')
         output = get_status(new_job)
     return jsonify(output)
 

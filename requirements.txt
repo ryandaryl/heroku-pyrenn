@@ -1,3 +1,7 @@
+requests
 Flask==0.12
 rq
-requests
+pyrenn
+pandas
+xlrd
+matplotlib
