@@ -1,5 +1,5 @@
-import os
-from flask import Flask, request, jsonify, render_template
+import os, json
+from flask import Flask, request, render_template
 from rq import Queue
 from worker import conn
 from worker_tasks import run_script
@@ -8,13 +8,26 @@ app = Flask(__name__)
 q = Queue(connection=conn)
 
 def get_status(job):
+    app_url = 'https://rnn-rdm.herokuapp.com'
     status = {
         'id': job.id,
         'result': job.result,
-        'status': 'failed' if job.is_failed else 'pending' if job.result == None else 'completed'
+        'status': '',
+        'message': '',
+        'link': ''
     }
+    options = {
+        'status': failed
+    } if job.is_failed else {
+        'status': 'pending',
+        'message': 'Still working. Wait a few minutes and click the link to see if the job is ready.',
+        'link': '<a href="{}?job={}">Click here.</a>'.format(app_url, job.id)
+    } if job.result == None else {
+        'status': 'completed'
+    }
+    status.update(options)
     status.update(job.meta)
-    return jsonify(status)
+    return status
 
 @app.route("/")
 def handle_job():
@@ -22,13 +35,16 @@ def handle_job():
     if query_id:
         found_job = q.fetch_job(query_id)
         if found_job:
-            output = render_template('output.html', output=found_job.result) if found_job.result else get_status(found_job)
+            if found_job.result:
+                response = render_template('output.html', output=found_job.result)
+            else:
+                response = render_template('wait.html', status=get_status(found_job))
         else:
-            output = { 'id': None, 'error_message': 'No job exists with the id number ' + query_id }
+            response = { 'id': None, 'error_message': 'No job exists with the id number ' + query_id }
     else:
         new_job = q.enqueue(run_script, 'scripts/example_friction.py', timeout='1h')
-        output = get_status(new_job)
-    return output
+        response = render_template('wait.html', status=get_status(new_job))
+    return response
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
