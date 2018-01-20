@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from rq import Queue
 from worker import conn
 from worker_tasks import run_script
@@ -14,7 +14,7 @@ def get_status(job):
         'status': 'failed' if job.is_failed else 'pending' if job.result == None else 'completed'
     }
     status.update(job.meta)
-    return status
+    return jsonify(status)
 
 @app.route("/")
 def handle_job():
@@ -22,13 +22,13 @@ def handle_job():
     if query_id:
         found_job = q.fetch_job(query_id)
         if found_job:
-            output = get_status(found_job)
+            output = render_template('output.html', output=found_job.result) if found_job.result else get_status(found_job)
         else:
             output = { 'id': None, 'error_message': 'No job exists with the id number ' + query_id }
     else:
-        new_job = q.enqueue(run_script, 'scripts/example_compair.py', timeout='1h')
+        new_job = q.enqueue(run_script, 'scripts/example_friction.py', timeout='1h')
         output = get_status(new_job)
-    return jsonify(output)
+    return output
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

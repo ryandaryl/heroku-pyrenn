@@ -1,12 +1,14 @@
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import pyrenn as prn
 
 ###
 #Read Example Data
-df = pd.ExcelFile('example_data.xlsx').parse('pt2')
+df = pd.ExcelFile('data/example_data.xlsx').parse('pt2')
 P = df['P'].values
 Y = df['Y'].values
 Ptest = df['Ptest'].values

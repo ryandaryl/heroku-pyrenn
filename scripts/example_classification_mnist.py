@@ -1,4 +1,6 @@
 import matplotlib as mpl
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np

@@ -11,7 +11,7 @@ import pyrenn as prn
 
 ###
 #Read Example Data
-df = pd.ExcelFile('example_data.xlsx').parse('pt2')
+df = pd.ExcelFile('data/example_data.xlsx').parse('pt2')
 P = df['P'].values
 Y = df['Y'].values
 
